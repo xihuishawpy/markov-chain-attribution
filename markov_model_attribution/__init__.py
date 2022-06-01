@@ -7,25 +7,22 @@ def run_model(paths):
     regex = re.compile('[^a-zA-Z> ]')
     paths.rename(columns={paths.columns[0]: "Paths"}, inplace=True)
     paths['Paths'] = paths['Paths'].apply(lambda x: regex.sub('', x))
-    markov_conversions = first_order(paths)
-    return markov_conversions
+    return first_order(paths)
 
 
 def calculate_removals(df, base_cvr):
-    removal_effect_list = dict()
+    removal_effect_list = {}
     channels_to_remove = df.drop(['conv', 'null', 'start'], axis=1).columns
+    removal_cvr_array = []
     for channel in channels_to_remove:
-        removal_cvr_array = list()
         removal_channel = channel
         removal_df = df.drop(removal_channel, axis=1)
         removal_df = removal_df.drop(removal_channel, axis=0)
+        one = float(1)
         for col in removal_df.columns:
-            one = float(1)
             row_sum = np.sum(list(removal_df.loc[col]))
             null_percent = one - row_sum
-            if null_percent == 0:
-                continue
-            else:
+            if null_percent != 0:
                 removal_df.loc[col]['null'] = null_percent
         removal_df.loc['null']['null'] = 1.0
         R = removal_df[['null', 'conv']]
